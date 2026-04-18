@@ -17,15 +17,27 @@
 
 extern int counterINT0;
 extern int counterTimer;
-
+extern char caracteres[];
+//El apuntador apunta a la ultima posición del arreglo donde puso un caracter
+int apuntador;
 /*
  * Rutina de Atención de la interrupción externa INT0
  */
-void __attribute__((interrupt, auto_psv)) _INT0Interrupt( void )
+void __attribute__((interrupt, auto_psv)) _INT1Interrupt( void )
 {
-	/* reset INT0 interrupt flag */
- 	IFS0bits.INT0IF = 0;
-        counterINT0++;
+	/* reset INT1 interrupt flag */
+ 	IFS1bits.INT1IF = 0;
+    //El caracter que entra por PORTB
+    char c = PORTB;
+    
+    //Verificar si esta en el rango de caracteres posibles.
+    if ((c >= '0' && c <= '9') ||
+    c == '+' || c == '-' || c == '*' || c == '/'){
+        //Verifica donde esta el apuntador, en el caso de estar al final pone el 
+        //caracter al inicio o lo pone en la posicion siguiente
+    }
+    //borrar al final.    
+    //counterINT0++;
         
 }
 
@@ -69,28 +81,24 @@ void Init_Timer1( void )
 
 }
 
-void Init_INT0( void )
+void Init_INT1( void )
 {
-    /* reset INT0 interrupt flag */
-    IFS0bits.INT0IF = 0;
+    /* reset INT1 interrupt flag */
+    IFS1bits.INT1IF = 0;
 
-    /* set INT0 interrupt priority level */
-    IPC0bits.INT0IP = 5;
+    /* set INT1 interrupt priority level */
+    IPC5bits.INT1IP = 5;
 
-    /* enable INT0 interrupt */
-    IEC0bits.INT0IE = 1;
+    /* enable INT1 interrupt */
+    IEC1bits.INT1IE = 1;
 }
 
 
 void config( void )
 {
-	//Inicialización de PORTS I/O
-	/* set LED pins (RA0-RA7) as outputs */
-	TRISA = 0xFF00;
-	LATA  = 0xFF00;  //Apago todos los LEDs
-
-        /* Inicializar Interrupción Externa INT0 */
-        Init_INT0();
+	TRISB = 0xFFFF; //Todo como entrada
+        /* Inicializar Interrupción Externa INT1 */
+        Init_INT1();
 
 	/* Inicializar Timers necesarios */
 	Init_Timer1();
