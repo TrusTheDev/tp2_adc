@@ -17,7 +17,7 @@ extern char caracteres[];
 //El apuntador apunta a la ultima posición del arreglo donde puso un caracter
 extern int apuntador;
 extern int length;
-int aux;
+volatile int aux;
 /*
  * Rutina de Atención de la interrupción externa INT0
  */
@@ -46,7 +46,7 @@ void __attribute__((interrupt, auto_psv)) _INT1Interrupt( void )
 }
 
 int incrementT1(int timer){
-    return timer += 93750;
+    return timer += 23;
 }
 /*
  * Rutina de Atención de la interrupción del Timer1
@@ -55,10 +55,11 @@ void __attribute__((interrupt, auto_psv)) _T1Interrupt( void )
 {
 	/* reset Timer 1 interrupt flag*/
  	IFS0bits.T1IF = 0;
-    if(aux != PORTB){
-        aux = PORTB;
-        PR1 = 93750;
-    } else if(PR1 != 562500){
+    int puerto = PORTB;
+    if(aux != puerto){
+        aux = puerto;
+        PR1 = 23;
+    } else if(PR1 < 140){
         PR1 = incrementT1(PR1);
     }
 }
@@ -74,9 +75,8 @@ void Init_Timer1( void )
 //Configurar Timer1
 T1CONbits.TON = 0;
 T1CONbits.TCS = 0;
-T1CONbits.TCKPS = 2; // 1:64
-TMR1 = 0;
-PR1 = 93750; //150 ms 
+T1CONbits.TCKPS = 4; // 1:256
+PR1 = 23; //150 ms 
 //Configurar Interrupción.
 IPC0bits.T1IP = 1; // Prioridad 1
 IFS0bits.T1IF = 0;
@@ -98,11 +98,10 @@ void Init_INT1( void )
 void config( void )
 {
 	TRISB = 0xFFFF; //Todo como entrada
-    aux = TRISB;
+    aux = PORTB;
     /* Inicializar Interrupción Externa INT1 */
     Init_INT1();
 	/* Inicializar Timers necesarios */
 	Init_Timer1();
-
 }
 
