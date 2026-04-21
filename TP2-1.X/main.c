@@ -44,18 +44,14 @@ int counterTimer, counterINT0 = 0;
  * si hay datos el timer resetea a 150us
  */
 char caracteres[5];
+int apuntador = 0;
+const int length = sizeof(caracteres) / sizeof(caracteres[0]);
 int main(void) {
+    
     config();
     while(TRUE)
     {
-        /* Borrar al final.
-        if (counterTimer > 9 )
-        {
-            LATA = counterINT0;
-            counterTimer = 0;
-            counterINT0 = 0;
-        }
-         */
+        
     }
 
 }
