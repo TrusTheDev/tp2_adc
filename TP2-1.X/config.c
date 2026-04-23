@@ -13,6 +13,9 @@
 #include "p33FJ256GP710.h"
 #include "config.h"
 
+#define FCY 40000000
+#define VAL_PR1 (0,000150 / (1/FCY*8))
+
 extern char caracteres[];
 //El apuntador apunta a la ultima posición del arreglo donde puso un caracter
 extern int apuntador;
@@ -46,7 +49,7 @@ void __attribute__((interrupt, auto_psv)) _INT1Interrupt( void )
 }
 
 int incrementT1(int timer){
-    return timer += 23;
+    return timer += VAL_PR1;
 }
 /*
  * Rutina de Atención de la interrupción del Timer1
@@ -58,8 +61,8 @@ void __attribute__((interrupt, auto_psv)) _T1Interrupt( void )
     int puerto = PORTB;
     if(aux != puerto){
         aux = puerto;
-        PR1 = 23;
-    } else if(PR1 < 140){
+        PR1 = VAL_PR1;
+    } else if(PR1 < 4500){
         PR1 = incrementT1(PR1);
     }
 }
@@ -75,8 +78,9 @@ void Init_Timer1( void )
 //Configurar Timer1
 T1CONbits.TON = 0;
 T1CONbits.TCS = 0;
-T1CONbits.TCKPS = 4; // 1:256
-PR1 = 23; //150 ms 
+T1CONbits.TCKPS = 1; //1:64 -- 1:256
+//PR1 = 93.75; //150 us
+PR1 = VAL_PR1;
 //Configurar Interrupción.
 IPC0bits.T1IP = 1; // Prioridad 1
 IFS0bits.T1IF = 0;
