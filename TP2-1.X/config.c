@@ -3,7 +3,7 @@
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * Author            Date      Comments on this revision
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-* Sebasti醤 Wahler  23/03/2016  Primer release - Interrupciones
+* Sebasti谩n Wahler  23/03/2016  Primer release - Interrupciones
 *
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 *
@@ -13,16 +13,17 @@
 #include "p33FJ256GP710.h"
 #include "config.h"
 
-#define FCY 40000000
-#define VAL_PR1 (0,000150 / (1/FCY*8))
+//Configuracion de valores para el timer //
+#define PR1_BASE 749
+#define PR1_MAX 4499
 
 extern char caracteres[];
-//El apuntador apunta a la ultima posici髇 del arreglo donde puso un caracter
+//El apuntador apunta a la ultima posici贸n del arreglo donde puso un caracter
 extern int apuntador;
 extern int length;
 volatile int aux;
 /*
- * Rutina de Atenci髇 de la interrupci髇 externa INT0
+ * Rutina de Atenci贸n de la interrupci贸n externa INT0
  */
 void __attribute__((interrupt, auto_psv)) _INT1Interrupt( void )
 {
@@ -48,23 +49,34 @@ void __attribute__((interrupt, auto_psv)) _INT1Interrupt( void )
     //counterINT0++;
 }
 
-int incrementT1(int timer){
-    return timer += VAL_PR1;
-}
+
+
 /*
- * Rutina de Atenci髇 de la interrupci髇 del Timer1
+ * Rutina de Atenci贸n de la interrupci贸n del Timer1
  */
-void __attribute__((interrupt, auto_psv)) _T1Interrupt( void )
-{
-	/* reset Timer 1 interrupt flag*/
- 	IFS0bits.T1IF = 0;
-    int puerto = PORTB;
-    if(aux != puerto){
-        aux = puerto;
-        PR1 = VAL_PR1;
-    } else if(PR1 < 4500){
-        PR1 = incrementT1(PR1);
-    }
+void __attribute__((interrupt, auto_psv)) _T1Interrupt( void ){
+//no me acuerdo bien si eran ni bien salte la rutina de atencion o si era dps asi que lo deje aca
+
+
+	int puerto = PORTB;
+
+        if (aux != puerto){  //si el valor es distinto..
+                  
+            aux = puerto;
+            PR1 = PR1_BASE;
+}
+
+        else {
+
+    if (PR1 < PR1_MAX){ // si PR1 es menor a 900us,aumenta de 150us en 150us con tope de 900us
+        
+        PR1 +=PR1_BASE; // 150us,300us,450...900us//
+   }
+     else{
+        PR1 = PR1_MAX; //tope maximo de 900
+   }
+ }
+    IFS0bits.T1IF = 0;
 }
 
 /*---------------------------------------------------------------------
@@ -75,13 +87,11 @@ void __attribute__((interrupt, auto_psv)) _T1Interrupt( void )
 -----------------------------------------------------------------------*/
 void Init_Timer1( void )
 {
-//Configurar Timer1
 T1CONbits.TON = 0;
 T1CONbits.TCS = 0;
-T1CONbits.TCKPS = 1; //1:64 -- 1:256
-//PR1 = 93.75; //150 us
-PR1 = VAL_PR1;
-//Configurar Interrupci髇.
+T1CONbits.TCKPS = 1;  // (00) 1:1 (01) 1:8 (10) 1:64 (11) 1:256 // si mal no me equivoco,usaron 1:256 y por eso daba 23 en PR1,lo cambie de rompehuevos nomas
+PR1 = 749;
+//Configurar Interrupci贸n.
 IPC0bits.T1IP = 1; // Prioridad 1
 IFS0bits.T1IF = 0;
 IEC0bits.T1IE = 1;
@@ -101,11 +111,15 @@ void Init_INT1( void )
 }
 void config( void )
 {
+    AD1PCFGL = 0xFFFF;
+    
 	TRISB = 0xFFFF; //Todo como entrada
     aux = PORTB;
-    /* Inicializar Interrupci髇 Externa INT1 */
+    
+    TRISBbits.TRISB1 = 1;
+    INTCON2bits.INT1EP = 0;
+    /* Inicializar Interrupci贸n Externa INT1 */
     Init_INT1();
 	/* Inicializar Timers necesarios */
 	Init_Timer1();
 }
-
