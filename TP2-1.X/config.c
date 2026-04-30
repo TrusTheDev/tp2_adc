@@ -43,34 +43,24 @@ void __attribute__((interrupt, auto_psv)) _INT1Interrupt( void )
             apuntador++;
         }
         caracteres[apuntador] = c;
-        
     }
     //borrar al final.    
     //counterINT0++;
 }
-
-
 
 /*
  * Rutina de Atención de la interrupción del Timer1
  */
 void __attribute__((interrupt, auto_psv)) _T1Interrupt( void ){
 //no me acuerdo bien si eran ni bien salte la rutina de atencion o si era dps asi que lo deje aca
-
-
 	int puerto = PORTB;
-
         if (aux != puerto){  //si el valor es distinto..
-                  
             aux = puerto;
             PR1 = PR1_BASE;
 }
-
         else {
-
     if (PR1 < PR1_MAX){ // si PR1 es menor a 900us,aumenta de 150us en 150us con tope de 900us
-        
-        PR1 +=PR1_BASE; // 150us,300us,450...900us//
+        PR1 +=PR1_BASE + 1 ; // 150us,300us,450...900us//
    }
      else{
         PR1 = PR1_MAX; //tope maximo de 900
@@ -91,7 +81,6 @@ T1CONbits.TON = 0;
 T1CONbits.TCS = 0;
 T1CONbits.TCKPS = 1;  // (00) 1:1 (01) 1:8 (10) 1:64 (11) 1:256 // si mal no me equivoco,usaron 1:256 y por eso daba 23 en PR1,lo cambie de rompehuevos nomas
 PR1 = 749;
-//Configurar Interrupción.
 IPC0bits.T1IP = 1; // Prioridad 1
 IFS0bits.T1IF = 0;
 IEC0bits.T1IE = 1;
