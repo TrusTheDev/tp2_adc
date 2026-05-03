@@ -2,7 +2,7 @@
  FileName:        main.c
  Dependencies:    p33FJ256GP710.h
  Processor:       dsPIC33F
- Compiler:        MPLAB® C30 v2.01 or higher
+ Compiler:        MPLABÂ® C30 v2.01 or higher
 
  Ejemplo de funcionamiento de:
     Timer1
@@ -13,45 +13,49 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  Author            Date      Comments on this revision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- Sebastián Wahler  23/03/16  Proyecto base - Interrupciones
+ SebastiÃ¡n Wahler  23/03/16  Proyecto base - Interrupciones
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  **********************************************************************/
 
 #include "p33FJ256GP710.h"
 #include "config.h"
 
-#define TAM_LOG 100 //Tamaño de la tabla final
+#define TAM_LOG 100 //TamaÃ±o de la tabla final
 
-volatile char caracteres[TAM_BUFFER]; //Arreglo donde se guardan los caracteres válidos que entran
-volatile int indice_escritura = 0; //Índice para saber donde escribir el próximo dato
-volatile int indice_lectura = 0; //Índice para saber que dato toca leer
+volatile char caracteres[TAM_BUFFER]; //Arreglo donde se guardan los caracteres vÃ¡lidos que entran
+volatile int indice_escritura = 0; //Ãndice para saber donde escribir el prÃ³ximo dato
+volatile int indice_lectura = 0; //Ãndice para saber que dato toca leer
 volatile int flag_timer = 0; //"Bandera" para que el main sepa cuando trabajar
-char log_operaciones[TAM_LOG]; //Tabla final para guardar los datos válidos finales
-int indice_log = 0; //Índice para recorrer la tabla final
+char log_operaciones[TAM_LOG]; //Tabla final para guardar los datos vÃ¡lidos finales
+int indice_log = 0; //Ãndice para recorrer la tabla final
 unsigned long contador = 0; //Variable para controlar la velocidad del LED
 
 /*
  * Programa Principal
  * 
- * Objetivo: Implementar una rutina de atención para recibir caracteres por PORTB,
+ * Objetivo: Implementar una rutina de atenciÃ³n para recibir caracteres por PORTB,
  * usando un arreglo como buffer circular (vuelve al inicio al llegar al final).
  * 
- * Productor (Interrupción INT1):
+ * Productor (InterrupciÃ³n INT1):
  * El ingreso de caracteres se da por un flanco ascendente en la INT1.
- * Solo se aceptan números (ASCII del '0' al '9') y los símbolos '+' '-' '*' '/'. 
+ * Solo se aceptan nÃºmeros (ASCII del '0' al '9') y los sÃ­mbolos '+' '-' '*' '/'. 
  * Cualquier otro caracter es descartado.
  * 
  * Consumidor (Main):
  * Lee los caracteres del buffer y los traslada a una tabla de Log de Operaciones.
- * Si llega a entrar una letra minúscula, la convierte a mayúscula antes de guardarla.
+ * Si llega a entrar una letra minÃºscula, la convierte a mayÃºscula antes de guardarla.
  * En paralelo a esto, se ejecuta una rutina de parpadeo de un LED.
  * 
- * Temporización Dinámica (Timer1):
- * El consumidor no lee de forma constante, un timer le avisa cuándo trabajar.
+ * TemporizaciÃ³n DinÃ¡mica (Timer1):
+ * El consumidor no lee de forma constante, un timer le avisa cuÃ¡ndo trabajar.
  * Estado inicial: 150us.
- * Si no hay datos, la espera aumenta de a 150us hasta llegar a un máximo de 900us.
+ * Si no hay datos, la espera aumenta de a 150us hasta llegar a un mÃ¡ximo de 900us.
  * Si hay datos para leer, el timer se resetea a los 150us.
  */
+
+AD1PCFGH = 0xFFFF;
+AD1PCFGL = 0xFFFF;
+AD2PCFGL = 0xFFFF;
 
 int main(void) {
 
@@ -63,7 +67,7 @@ int main(void) {
             flag_timer = 0; //Se baja la bandera
             char caracter_valido = caracteres[indice_lectura];
 
-            //Si es una minúscula, se pasa a mayúscula
+            //Si es una minÃºscula, se pasa a mayÃºscula
             if (caracter_valido >= 'a' && caracter_valido <= 'z') {
                 caracter_valido = caracter_valido - 32;
             }
@@ -71,9 +75,9 @@ int main(void) {
             //Se guarda el resultado en la tabla final
             log_operaciones[indice_log] = caracter_valido;
             indice_log++;
-            indice_lectura++; //Se avanza al próximo casillero
+            indice_lectura++; //Se avanza al prÃ³ximo casillero
 
-            //Si los índices llegan al máximo, vuelven a cero (Buffer circular)ç//
+            //Si los Ã­ndices llegan al mÃ¡ximo, vuelven a cero (Buffer circular)Ã§//
             if (indice_log == TAM_LOG) {
                 indice_log = 0;
             }
