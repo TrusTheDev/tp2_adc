@@ -15,6 +15,9 @@ TP2_ADC/
 ├── Interrupciones de INT0 y TMR1/
 ├── Multitasking/
 │
-└── TP2/
-    └── (Desarrollo del Trabajo Práctico)
+└── TP2-1/
+    └── (Desarrollo del ejercicio 1)
+│
+└── TP2-2/
+    └── (Desarrollo del ejercicio 2)
 ```
