@@ -15,7 +15,7 @@ void confReloj(void) {
     T1CONbits.TCKPS = 0;
     TMR1 = 0;
     PR1 = 100;
-    //Configurar Interrupción.
+    //Configurar InterrupciÃ³n.
     IPC0bits.T1IP = 1; // Prioridad 1
     IFS0bits.T1IF = 0;
     IEC0bits.T1IE = 1;
@@ -34,8 +34,7 @@ int Apuntador = 0;
 extern int procesos[];
 int *procesoActual;
 void planificador(void) {
-    procesoActual = WREG15;
-    procesos[Apuntador] = procesoActual;
+    procesos[Apuntador] = WREG15;
     
     //Reemplazar con operacion ternaria
     if (Apuntador == 2) {
