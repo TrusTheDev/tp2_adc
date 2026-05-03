@@ -15,11 +15,11 @@ void procesoA(void)
     int x,y,z;
     x = 2;
     y = 4;
-    //while(1) {
+    while(1) {
         z = x + y;
         x = x + 2;
         y = z;
-    //}
+    }
         
 
     
@@ -30,14 +30,10 @@ void procesoB(void)
     int a,b,c;
     a = 1;
     b = 3;
-    //while(1) {
+    while(1) {
         c = a * b;
         a = a + 2;
-    //}
-    unsigned int *sp;
-    *sp = WREG15;
-    
-    sp = procesoA;
+    }
 }
 
 void procesoC(void)
@@ -55,14 +51,11 @@ void procesoC(void)
 }
 int procesos[3];
 int main(int argc, char** argv) {
-    procesoB();
-    
-    
+    //Esto no esta bien
     procesos[0] = (int)procesoA;
     procesos[1] = (int)procesoB;
     procesos[2] = (int)procesoC;
     boot();
-//    int procesos[] = {};
     procesoA();
     return (EXIT_SUCCESS);
 }

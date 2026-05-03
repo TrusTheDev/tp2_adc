@@ -5,9 +5,9 @@
  Compiler:        MPLAB® C30 v2.01 or higher
 
  Ejemplo de funcionamiento de:
- 	Timer1
+    Timer1
         INT0
- 	PORTS
+    PORTS
 
  REVISION HISTORY:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,44 +15,85 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  Sebastián Wahler  23/03/16  Proyecto base - Interrupciones
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-**********************************************************************/
+ **********************************************************************/
 
 #include "p33FJ256GP710.h"
 #include "config.h"
 
+#define TAM_LOG 100 //Tamaño de la tabla final
 
-int counterTimer, counterINT0 = 0;
+volatile char caracteres[TAM_BUFFER]; //Arreglo donde se guardan los caracteres válidos que entran
+volatile int indice_escritura = 0; //Índice para saber donde escribir el próximo dato
+volatile int indice_lectura = 0; //Índice para saber que dato toca leer
+volatile int flag_timer = 0; //"Bandera" para que el main sepa cuando trabajar
+char log_operaciones[TAM_LOG]; //Tabla final para guardar los datos válidos finales
+int indice_log = 0; //Índice para recorrer la tabla final
+unsigned long contador = 0; //Variable para controlar la velocidad del LED
 
 /*
  * Programa Principal
- * Objetivo: implemetar rutina de atención cada vez que se recibe un caracter
- * por PORTB de manera circular utilizando un arreglo como buffer que volvera al 
- * inicio una vez que se llegue al final del arreglo.
  * 
- * El ingreso de caracteres se da gracias a un flanco ascendente en la INT1
- * solamente se aceptaran ASCII del '0' al '9' y los simbolos '+' '-' '*' '/' 
- * cualquier otro caracter es descartado.
+ * Objetivo: Implementar una rutina de atención para recibir caracteres por PORTB,
+ * usando un arreglo como buffer circular (vuelve al inicio al llegar al final).
  * 
- * El consumidor(main) debe leer los caracteres y trasladarlos a una tabla de log
- * de operaciones, en caso de minuscula convertir a mayuscula
- * el programa principal debe ejecutar en paralelo una rutina de parpadeo de un led
+ * Productor (Interrupción INT1):
+ * El ingreso de caracteres se da por un flanco ascendente en la INT1.
+ * Solo se aceptan números (ASCII del '0' al '9') y los símbolos '+' '-' '*' '/'. 
+ * Cualquier otro caracter es descartado.
  * 
- * Timer
- * El consumidor no es constante, debe configurar un timer para disparar la tarea
- * Estado inicial base: 150us
- * Si no hay datos 150us + 150us hasta un maximo de 900us
- * si hay datos el timer resetea a 150us
+ * Consumidor (Main):
+ * Lee los caracteres del buffer y los traslada a una tabla de Log de Operaciones.
+ * Si llega a entrar una letra minúscula, la convierte a mayúscula antes de guardarla.
+ * En paralelo a esto, se ejecuta una rutina de parpadeo de un LED.
+ * 
+ * Temporización Dinámica (Timer1):
+ * El consumidor no lee de forma constante, un timer le avisa cuándo trabajar.
+ * Estado inicial: 150us.
+ * Si no hay datos, la espera aumenta de a 150us hasta llegar a un máximo de 900us.
+ * Si hay datos para leer, el timer se resetea a los 150us.
  */
-char caracteres[5];
-int apuntador = 0;
-const int length = sizeof(caracteres) / sizeof(caracteres[0]);
+
 int main(void) {
-    
-    config();
-    while(TRUE)
-    {
-        
+
+    config(); //Se inicializa todo
+
+    while (TRUE) {
+        //Si el Timer nos avisa que hay datos nuevos
+        if (flag_timer == 1) {
+            flag_timer = 0; //Se baja la bandera
+            char caracter_valido = caracteres[indice_lectura];
+
+            //Si es una minúscula, se pasa a mayúscula
+            if (caracter_valido >= 'a' && caracter_valido <= 'z') {
+                caracter_valido = caracter_valido - 32;
+            }
+
+            //Se guarda el resultado en la tabla final
+            log_operaciones[indice_log] = caracter_valido;
+            indice_log++;
+            indice_lectura++; //Se avanza al próximo casillero
+
+            //Si los índices llegan al máximo, vuelven a cero (Buffer circular)ç//
+            if (indice_log == TAM_LOG) {
+                indice_log = 0;
+            }
+            if (indice_lectura == TAM_BUFFER) {
+                indice_lectura = 0;
+            }
+        }
+
+        //Rutina de parpadeo del LED (en paralelo)
+        //Si se cumplen tantos ciclos (100000 por ejemplo)
+        if (contador == 100000) {
+            contador = 0; //Se reinicia el contador
+
+            //Se invierte el estado del pin
+            if (PORTAbits.RA0 == 1) {
+                LATAbits.LATA0 = 0;
+            } else {
+                LATAbits.LATA0 = 1;
+            }
+        }
+        contador++; //El contador siempre suma
     }
-
 }
-

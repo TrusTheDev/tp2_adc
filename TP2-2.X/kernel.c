@@ -14,7 +14,6 @@ void confReloj(void) {
     T1CONbits.TCS = 0;
     T1CONbits.TCKPS = 0;
     TMR1 = 0;
-    //PR1 = 11; // Ojo! Cada doce!
     PR1 = 100;
     //Configurar Interrupción.
     IPC0bits.T1IP = 1; // Prioridad 1
@@ -34,7 +33,6 @@ void boot(void)
 int Apuntador = 0;
 extern int procesos[];
 int *procesoActual;
-
 void planificador(void) {
     procesoActual = WREG15;
     procesos[Apuntador] = procesoActual;

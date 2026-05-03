@@ -1,114 +1,87 @@
 /**********************************************************************
-* REVISION HISTORY:
-*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-* Author            Date      Comments on this revision
-*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-* SebastiÃ¡n Wahler  23/03/2016  Primer release - Interrupciones
-*
-*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*
-* ADDITIONAL NOTES: 
-*
-**********************************************************************/
+ * REVISION HISTORY:
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Author            Date      Comments on this revision
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ * ADDITIONAL NOTES: 
+ *
+ **********************************************************************/
 #include "p33FJ256GP710.h"
 #include "config.h"
 
-//Configuracion de valores para el timer //
-#define PR1_BASE 749
-#define PR1_MAX 4499
+#define PR1_BASE 750 //150us con prescaler 1:8
+#define PR1_MAX 4500 //900us con prescaler 1:8
 
-extern char caracteres[];
-//El apuntador apunta a la ultima posiciÃ³n del arreglo donde puso un caracter
-extern int apuntador;
-extern int length;
-volatile int aux;
-/*
- * Rutina de AtenciÃ³n de la interrupciÃ³n externa INT0
- */
-void __attribute__((interrupt, auto_psv)) _INT1Interrupt( void )
-{
-	/* reset INT1 interrupt flag */
- 	IFS1bits.INT1IF = 0;
-    //El caracter que entra por PORTB
-    char c = PORTB;
-    
-    //Verificar si esta en el rango de caracteres posibles.
-    if ((c >= '0' && c <= '9') ||
-    c == '+' || c == '-' || c == '*' || c == '/'){
-        //Verifica donde esta el apuntador, en el caso de estar al final pone el 
-        //caracter al inicio o lo pone en la posicion siguiente
-        if(apuntador > length){
-            apuntador = 0;
-        } else {
-            apuntador++;
+extern volatile char caracteres[TAM_BUFFER];
+extern volatile int indice_escritura;
+extern volatile int indice_lectura;
+extern volatile int flag_timer;
+
+//Rutina de Atención de la interrupción externa INT1
+
+void __attribute__((interrupt, auto_psv)) _INT1Interrupt(void) {
+    IFS1bits.INT1IF = 0; //Se limpia el Interrupt Flag para evitar bucle infinito
+    char c = PORTB; //Se lee el caracter que entra por PORTB
+    //Se verifica que c sea un caracter permitido
+    if ((c >= '0' && c <= '9') || c == '+' || c == '-' || c == '*' || c == '/') {
+        caracteres[indice_escritura] = c; //Se guarda en el casillero actual
+        indice_escritura++; //Se avanza al próximo casillero
+
+        //Si se llega al tope, vuelve al inicio
+        if (indice_escritura == TAM_BUFFER) {
+            indice_escritura = 0;
         }
-        caracteres[apuntador] = c;
     }
-    //borrar al final.    
-    //counterINT0++;
 }
 
-/*
- * Rutina de AtenciÃ³n de la interrupciÃ³n del Timer1
- */
-void __attribute__((interrupt, auto_psv)) _T1Interrupt( void ){
-//no me acuerdo bien si eran ni bien salte la rutina de atencion o si era dps asi que lo deje aca
-	int puerto = PORTB;
-        if (aux != puerto){  //si el valor es distinto..
-            aux = puerto;
-            PR1 = PR1_BASE;
-}
-        else {
-    if (PR1 < PR1_MAX){ // si PR1 es menor a 900us,aumenta de 150us en 150us con tope de 900us
-        PR1 +=PR1_BASE + 1 ; // 150us,300us,450...900us//
-   }
-     else{
-        PR1 = PR1_MAX; //tope maximo de 900
-   }
- }
-    IFS0bits.T1IF = 0;
+//Rutina de Atención de la interrupción del Timer1
+
+void __attribute__((interrupt, auto_psv)) _T1Interrupt(void) {
+    IFS0bits.T1IF = 0; //Se limpia el Interrupt Flag para evitar bucle infinito
+    //Si hay datos
+    if (indice_escritura != indice_lectura) {
+        flag_timer = 1; //Se avisa que hay datos
+        PR1 = PR1_BASE; //Se resetea el PR1 a 150us
+    }        //Si no hay datos
+    else {
+        if (PR1 < PR1_MAX) {
+            PR1 += PR1_BASE; //Se suman 150us
+        } else {
+            PR1 = PR1_MAX; //Tope de 900us
+        }
+    }
 }
 
-/*---------------------------------------------------------------------
-  Function Name: Init_Timer1
-  Description:   Initialize Timer1
-  Inputs:        None
-  Returns:       None
------------------------------------------------------------------------*/
-void Init_Timer1( void )
-{
-T1CONbits.TON = 0;
-T1CONbits.TCS = 0;
-T1CONbits.TCKPS = 1;  // (00) 1:1 (01) 1:8 (10) 1:64 (11) 1:256 // si mal no me equivoco,usaron 1:256 y por eso daba 23 en PR1,lo cambie de rompehuevos nomas
-PR1 = 749;
-IPC0bits.T1IP = 1; // Prioridad 1
-IFS0bits.T1IF = 0;
-IEC0bits.T1IE = 1;
-T1CONbits.TON = 1; //start 
+void Init_Timer1(void) {
+    //Se configura Timer1
+    T1CONbits.TON = 0; //Se asegura que esté apagado para configurarlo
+    T1CONbits.TCS = 0; //Reloj interno
+    T1CONbits.TCKPS = 1; //Prescaler 1:8
+    TMR1 = 0; // Se resetea el cronómetro a 0
+    PR1 = PR1_BASE; //Se pone el límite para 150us
+
+    //Se configura la interrupción
+    IPC0bits.T1IP = 1; //Se pone prioridad 1 al Timer1
+    IFS0bits.T1IF = 0; //Se limpia el Interrupt Flag para arrancar en limpio
+    IEC0bits.T1IE = 1; //Se habilita la interrupción Timer1
+    T1CONbits.TON = 1; //Se enciende el Timer1
 }
 
-void Init_INT1( void )
-{
-    /* reset INT1 interrupt flag */
-    IFS1bits.INT1IF = 0;
-
-    /* set INT1 interrupt priority level */
-    IPC5bits.INT1IP = 5;
-
-    /* enable INT1 interrupt */
-    IEC1bits.INT1IE = 1;
+void Init_INT1(void) {
+    //Se configura INT1
+    IFS1bits.INT1IF = 0; //Se limpia el Interrupt Flag para arrancar en limpio
+    INTCON2bits.INT1EP = 0; //Se configura como flanco ascendente
+    IPC5bits.INT1IP = 5; //Se pone prioridad 5 al INT1
+    IEC1bits.INT1IE = 1; //Se habilita la interrupción INT1
 }
-void config( void )
-{
-    AD1PCFGL = 0xFFFF;
-    
-	TRISB = 0xFFFF; //Todo como entrada
-    aux = PORTB;
-    
-    TRISBbits.TRISB1 = 1;
-    INTCON2bits.INT1EP = 0;
-    /* Inicializar InterrupciÃ³n Externa INT1 */
-    Init_INT1();
-	/* Inicializar Timers necesarios */
-	Init_Timer1();
+
+void config(void) {
+    //Se configuran los puertos, y se inicializan INT1 y Timer1
+    TRISA = 0xFFFE; // Configuración de RA0 como salida para LED
+    TRISB = 0xFFFF; //Configuración de PORTB como entrada para recibir datos
+    Init_INT1(); //Inicialización de INT1
+    Init_Timer1(); //Inicialización de Timer1
 }
