@@ -6,7 +6,8 @@
  */
 
 //Definiciones
-#define TRUE	1
+#define TRUE 1
+#define TAM_BUFFER 10 //Tamaño del buffer circular
 
 //Declaraciones
 void config( void );

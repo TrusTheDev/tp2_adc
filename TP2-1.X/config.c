@@ -31,9 +31,7 @@ void __attribute__((interrupt, auto_psv)) _INT1Interrupt(void) {
         indice_escritura++; //Se avanza al próximo casillero
 
         //Si se llega al tope, vuelve al inicio
-        if (indice_escritura == TAM_BUFFER) {
-            indice_escritura = 0;
-        }
+        indice_escritura == TAM_BUFFER ? indice_escritura = 0 : 0;
     }
 }
 
@@ -45,14 +43,9 @@ void __attribute__((interrupt, auto_psv)) _T1Interrupt(void) {
     if (indice_escritura != indice_lectura) {
         flag_timer = 1; //Se avisa que hay datos
         PR1 = PR1_BASE; //Se resetea el PR1 a 150us
-    }        //Si no hay datos
-    else {
-        if (PR1 < PR1_MAX) {
-            PR1 += PR1_BASE; //Se suman 150us
-        } else {
-            PR1 = PR1_MAX; //Tope de 900us
-        }
-    }
+    }//Si no hay datos
+    else   
+    (PR1 < PR1_MAX) ? (PR1 += PR1_BASE) : (PR1 = PR1_MAX);
 }
 
 void Init_Timer1(void) {
@@ -79,6 +72,9 @@ void Init_INT1(void) {
 }
 
 void config(void) {
+    AD1PCFGH = 0xFFFF;
+    AD1PCFGL = 0xFFFF;
+    AD2PCFGL = 0xFFFF;
     //Se configuran los puertos, y se inicializan INT1 y Timer1
     TRISA = 0xFFFE; // Configuración de RA0 como salida para LED
     TRISB = 0xFFFF; //Configuración de PORTB como entrada para recibir datos
