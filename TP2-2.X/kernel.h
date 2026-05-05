@@ -1,4 +1,3 @@
-
 #ifndef KERNEL_H
 #define	KERNEL_H
 
@@ -16,4 +15,3 @@ extern "C" {
 #endif
 
 #endif	/* KERNEL_H */
-

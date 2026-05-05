@@ -4,12 +4,10 @@ Ejercicio multitasking con interrupciones.
 Completar el código faltante.
  */
 
-
 #include "xc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "kernel.h"
-
 void procesoA(void)
 {
     int x,y,z;
@@ -20,11 +18,7 @@ void procesoA(void)
         x = x + 2;
         y = z;
     }
-        
-
-    
 }
-
 void procesoB(void)
 {
     int a,b,c;
@@ -35,11 +29,9 @@ void procesoB(void)
         a = a + 2;
     }
 }
-
 void procesoC(void)
 {
     int r,s,t;
-
     r = 1;
     s = r;
     while(1) {
@@ -49,12 +41,7 @@ void procesoC(void)
         s = s + 4;
     }
 }
-int procesos[3];
 int main(int argc, char** argv) {
-    //Esto no esta bien
-    procesos[0] = (int)procesoA;
-    procesos[1] = (int)procesoB;
-    procesos[2] = (int)procesoC;
     boot();
     procesoA();
     return (EXIT_SUCCESS);
