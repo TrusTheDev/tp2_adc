@@ -23,14 +23,13 @@ void confReloj(void){
     T1CONbits.TCS = 0; //Reloj interno
 	T1CONbits.TCKPS = 0; //Prescaler 1:1
     TMR1 = 0; //Se resetea el cronómetro a 0
-    PR1 = 100;
+    PR1 = 300;
     //Se configura la interrupción
 	IPC0bits.T1IP = 1; //Se pone prioridad 1 al Timer1
     IFS0bits.T1IF = 0; //Se limpia el Interrupt Flag para arrancar en limpio
  	IEC0bits.T1IE = 1; //Se habilita la interrupción Timer1
 	T1CONbits.TON = 1; //Se enciende el Timer1
-}
-
+ }
 void boot(void)
 {
     init();
@@ -38,22 +37,29 @@ void boot(void)
     return;
 }
 
+unsigned int estadoA[12];
+unsigned int estadoB[12];
+unsigned int estadoC[12];
 void planificador(void){
-    unsigned int *puntero = (int)WREG15 - 34; //Se restan 34 a la pila para encontrar donde se pauso el proceso actual
-    procesos[proceso_actual] = *puntero; //Se guarda en el arreglo la direccion por donde se quedo el proceso actual
-    //Se pasa al proximo proceso
+    static int i;
+    unsigned int *puntero = (int)WREG15 - 34;
     switch(proceso_actual){
         case 0:
-            proceso_actual = 1;
+              for(i = 0; i < 12; i++)
+                    estadoA[i] = puntero[i];
+             proceso_actual = 1;
             break;
         case 1:
+            for(i = 0; i < 12; i++)
+                estadoB[i] = puntero[i];
             proceso_actual = 2;
             break;
         case 2:
+            for(i = 0; i < 12; i++)
+                estadoC[i] = puntero[i];
             proceso_actual = 0;
     }
-    //Se pisa la direccion en la pila con la del proximo proceso
-    *puntero = procesos[proceso_actual];
+     *puntero = procesos[proceso_actual];
 }
 
 void __attribute__((interrupt, auto_psv)) _T1Interrupt( void ){
@@ -61,7 +67,7 @@ void __attribute__((interrupt, auto_psv)) _T1Interrupt( void ){
     quantum++; //Se suma uno al quantum
     //Cuando pasen 2 quantums, se llama al planificador para cambiar de proceso
     if (quantum == 2){
-        quantum = 0;
+         quantum = 0;
         planificador();
     }
 }

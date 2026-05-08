@@ -14,10 +14,10 @@ void procesoA(void)
     x = 2;
     y = 4;
     while(1) {
-        z = x + y;
-        x = x + 2;
-        y = z;
-    }
+         z = x + y;
+          x = x + 2;
+         y = z;
+     }
 }
 void procesoB(void)
 {
@@ -43,6 +43,6 @@ void procesoC(void)
 }
 int main(int argc, char** argv) {
     boot();
-    procesoA();
+      procesoA();
     return (EXIT_SUCCESS);
 }
