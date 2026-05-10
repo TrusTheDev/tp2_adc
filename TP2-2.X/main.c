@@ -42,14 +42,12 @@ void procesoC(void) {
     }
 }
 
-unsigned int estadoA[12];
-unsigned int estadoB[12];
-unsigned int estadoC[12];
+//Arreglos donde se guarda el estado de cada proceso
+unsigned int estadoA[TAM_ESTADO];
+unsigned int estadoB[TAM_ESTADO];
+unsigned int estadoC[TAM_ESTADO];
 
 int main(int argc, char** argv) {
-    estadoA[0] = procesoA;
-    estadoB[0] = procesoB;
-    estadoC[0] = procesoC;
     boot();
     procesoA();
     return (EXIT_SUCCESS);
