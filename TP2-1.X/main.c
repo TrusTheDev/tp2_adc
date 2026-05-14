@@ -53,6 +53,28 @@ unsigned long contador = 0; //Variable para controlar la velocidad del LED
  * Si hay datos para leer, el timer se resetea a los 150us.
  */
 
+/*
+ ### Números del 1 al 9
+| Carácter | Decimal | Binario (8 bits) |
+| :---: | :---: | :---: |
+| 1 | 49 | `00110001` |
+| 2 | 50 | `00110010` |
+| 3 | 51 | `00110011` |
+| 4 | 52 | `00110100` |
+| 5 | 53 | `00110101` |
+| 6 | 54 | `00110110` |
+| 7 | 55 | `00110111` |
+| 8 | 56 | `00111000` |
+| 9 | 57 | `00111001` |
+
+### Operadores Aritméticos
+| + | Suma | 43 | `00101011` |
+| - | Resta | 45 | `00101101` |
+| \ | Multiplicación | 42 | `00101010` |
+| / | División | 47 | `00101111` |
+
+ */
+
 
 
 int main(void) {
