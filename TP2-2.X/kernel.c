@@ -44,37 +44,28 @@ void planificador(void) {
     static int i;
     unsigned int *puntero = (unsigned int *)(WREG15 - 34);
     
-    //Se guarda el estado del proceso actual
+    //Se guarda el estado del proceso actual y se pone el estado del próximo proceso
     switch (proceso_actual) {
         case 0:
             for (i = 0; i < TAM_ESTADO; i++)
-                estadoA[i] = puntero[i];
-            proceso_actual = 1; //Pasamos al B
-            break;
-        case 1:
-            for (i = 0; i < TAM_ESTADO; i++)
-                estadoB[i] = puntero[i];
-            proceso_actual = 2; //Pasamos al C
-            break;
-        case 2:
-            for (i = 0; i < TAM_ESTADO; i++)
-                estadoC[i] = puntero[i];
-            proceso_actual = 0; //Pasamos al A
-    }
-    
-    //Restaurar el estado del próximo proceso
-    switch (proceso_actual) {
-        case 0:
-            for (i = 0; i < TAM_ESTADO; i++)
-                puntero[i] = estadoA[i];
-            break;
-        case 1:
+                estadoA[i] = puntero[i]; //Se guarda el A
             for (i = 0; i < TAM_ESTADO; i++)
                 puntero[i] = estadoB[i];
+            proceso_actual = 1; //Se pasa al B
+            break;
+        case 1:
+            for (i = 0; i < TAM_ESTADO; i++)
+                estadoB[i] = puntero[i]; //Se guarda el B
+            for (i = 0; i < TAM_ESTADO; i++)
+                puntero[i] = estadoC[i];
+            proceso_actual = 2; //Se pasa al C
             break;
         case 2:
             for (i = 0; i < TAM_ESTADO; i++)
-                puntero[i] = estadoC[i];
+                estadoC[i] = puntero[i]; //Se guarda el C
+            for (i = 0; i < TAM_ESTADO; i++)
+                puntero[i] = estadoA[i];
+            proceso_actual = 0; //Se pasa al A
     }
 }
 
