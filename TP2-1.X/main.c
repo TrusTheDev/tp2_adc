@@ -83,18 +83,21 @@ int main(void) {
         //Si el Timer nos avisa que hay datos nuevos
         if (flag_timer == 1) {
             flag_timer = 0; //Se baja la bandera
-            char caracter_valido = caracteres[indice_lectura];
-            //Si es una minúscula, se pasa a mayúscula
-            if (caracter_valido >= 'a' && caracter_valido <= 'z') {
-                caracter_valido = caracter_valido - 32;
+            
+            while(indice_escritura != indice_lectura){
+                char caracter_valido = caracteres[indice_lectura];
+                //Si es una minúscula, se pasa a mayúscula
+                if (caracter_valido >= 'a' && caracter_valido <= 'z') {
+                    caracter_valido = caracter_valido - 32;
+                }
+                //Se guarda el resultado en la tabla final
+                log_operaciones[indice_log] = caracter_valido;
+                indice_log++;
+                indice_lectura++; //Se avanza al próximo casillero
+                //Si los índices llegan al máximo, vuelven a cero (Buffer circular)ç//
+                indice_log == TAM_LOG ? indice_log = 0 : 0;
+                indice_lectura == TAM_BUFFER ? indice_lectura = 0 : 0;
             }
-            //Se guarda el resultado en la tabla final
-            log_operaciones[indice_log] = caracter_valido;
-            indice_log++;
-            indice_lectura++; //Se avanza al próximo casillero
-            //Si los índices llegan al máximo, vuelven a cero (Buffer circular)ç//
-            indice_log == TAM_LOG ? indice_log = 0 : 0;
-            indice_lectura == TAM_BUFFER ? indice_lectura = 0 : 0;
         }
         //Rutina de parpadeo del LED (en paralelo)
         //Si se cumplen tantos ciclos (100000 por ejemplo)
